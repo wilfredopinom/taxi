@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal del Taxista</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+  <header class="bg-black text-white p-4 flex items-center justify-between">
+  <div class="flex items-center gap-3 text-xl font-semibold">
+    🚖 Portal del Taxista
+    <button onclick="toggleSidebar()" title="Mostrar / ocultar menú" class="text-sm bg-gray-700 px-2 py-1 rounded">☰</button>
+  </div>
+  <button onclick="openConfig()" class="text-sm bg-gray-700 px-3 py-1 rounded-lg">⚙️</button>
+</header>
+
+  <main class="flex">
+
+    <!-- SIDEBAR -->
+<aside id="sidebar" class="w-full md:w-64 bg-white shadow p-4 space-y-2 transition-all duration-300 overflow-y-auto">
+  <h2 class="font-bold mb-2">📍 Puntos clave</h2>
+
+  <button onclick="showFlights(); loadFlights()" class="w-full flex items-center gap-2 bg-black text-white rounded-lg p-2">✈️ <span>Aeropuerto</span></button>
+  <button onclick="showTrains()" class="w-full flex items-center gap-2 bg-blue-600 text-white rounded-lg p-2">🚆 <span>Trenes</span></button>
+  <button onclick="showTarifas()" class="w-full flex items-center gap-2 bg-yellow-500 text-white rounded-lg p-2">💶 <span>Tarifas</span></button>
+  <button onclick="showCompaneros()" class="w-full flex items-center gap-2 bg-purple-600 text-white rounded-lg p-2">👥 <span>Compañeros</span></button>
+  <button onclick="showParadas()" class="w-full flex items-center gap-2 bg-orange-600 text-white rounded-lg p-2">📍 <span>Paradas</span></button>
+  <button onclick="showPeajes()" class="w-full flex items-center gap-2 bg-teal-600 text-white rounded-lg p-2">🛣️ <span>Peajes</span></button>
+  <button onclick="showCentrales()" class="w-full flex items-center gap-2 bg-red-600 text-white rounded-lg p-2">📞 <span>Centrales</span></button>
+  <button onclick="showTurnos()" class="w-full flex items-center gap-2 bg-indigo-600 text-white rounded-lg p-2">✈️ <span>Turnos Aerop.</span></button>
+</aside>
+
+<!-- CONTENIDO -->
+<section class="flex-1 p-4" id="mainContent">
+  <!-- VUELOS CON API REAL -->
+  <div id="flightsBlock" class="bg-white rounded-2xl shadow p-4 mb-4">
+    <h2 class="text-lg font-bold mb-2">✈️ Llegadas aéreas – Vigo (VGO)</h2>
+    <p class="text-sm mb-3">Datos reales. Si no existen o hay error, se indicará claramente.</p>
+    <ul id="flights" class="space-y-2 text-sm"></ul>
+    <p id="debug" class="text-xs text-red-500 mt-2 hidden"></p>
+    <p class="text-xs text-gray-500 mt-3">Fuente: proveedor aéreo configurado</p>
+  </div>
+
+  <!-- TRENES -->
+  <div id="trainsBlock" class="bg-white rounded-2xl shadow p-4 hidden">
+    <h2 class="text-lg font-bold mb-3">🚆 Trenes – Llegadas del día</h2>
+    <div class="flex gap-2 mb-3">
+      <button onclick="loadTrains('urz')" class="px-3 py-1 bg-blue-600 text-white rounded-lg">Vialia</button>
+      <button onclick="loadTrains('gui')" class="px-3 py-1 bg-green-600 text-white rounded-lg">Guixar</button>
+    </div>
+    <ul id="trains" class="space-y-2 text-sm"></ul>
+    <p id="trainError" class="text-xs text-red-500 mt-2 hidden"></p>
+  </div>
+  <!-- TARIFAS -->
+  <div id="tarifas" class="hidden">
+  <h2 class="text-lg font-bold mb-4">💶 Tarifas Taxi – Vigo</h2>
+  <div class="grid md:grid-cols-2 gap-4">
+
+    <div class="bg-blue-50 border-l-4 border-blue-500 rounded-2xl shadow p-4">
+      <h3 class="font-bold flex items-center gap-2">🌆 Tarifa 1 Urbana (L–V 6–22)</h3>
+      <ul class="mt-2 space-y-1 text-sm">
+        <li>🚕 Servicio mínimo: <strong>4,21 €</strong></li>
+        <li>📏 Kilómetro: <strong>1,13 €</strong></li>
+        <li>⏱️ Hora de espera: <strong>23,67 €</strong></li>
+      </ul>
+    </div>
+
+    <div class="bg-indigo-50 border-l-4 border-indigo-500 rounded-2xl shadow p-4">
+      <h3 class="font-bold flex items-center gap-2">🌙 Tarifa 2 Urbana Nocturna</h3>
+      <ul class="mt-2 space-y-1 text-sm">
+        <li>🚕 Servicio mínimo: <strong>4,47 €</strong></li>
+        <li>📏 Kilómetro: <strong>1,29 €</strong></li>
+        <li>⏱️ Hora de espera: <strong>25,78 €</strong></li>
+      </ul>
+    </div>
+
+    <div class="bg-green-50 border-l-4 border-green-500 rounded-2xl shadow p-4">
+      <h3 class="font-bold flex items-center gap-2">🛣️ Tarifa 3 Interurbana Día</h3>
+      <ul class="mt-2 space-y-1 text-sm">
+        <li>🚕 Mínimo percepción: <strong>3,60 €</strong></li>
+        <li>📏 Kilómetro: <strong>1,20 €</strong></li>
+        <li>⏱️ Hora de espera: <strong>16,00 €</strong></li>
+      </ul>
+    </div>
+
+    <div class="bg-emerald-50 border-l-4 border-emerald-500 rounded-2xl shadow p-4">
+      <h3 class="font-bold flex items-center gap-2">🌌 Tarifa 4 Interurbana Noche</h3>
+      <ul class="mt-2 space-y-1 text-sm">
+        <li>🚕 Mínimo percepción: <strong>4,32 €</strong></li>
+        <li>📏 Kilómetro: <strong>1,44 €</strong></li>
+        <li>⏱️ Hora de espera: <strong>19,20 €</strong></li>
+      </ul>
+    </div>
+
+    <div class="bg-yellow-50 border-l-4 border-yellow-500 rounded-2xl shadow p-4">
+      <h3 class="font-bold flex items-center gap-2">✈️ Bajada Aeropuerto</h3>
+      <ul class="mt-2 space-y-1 text-sm">
+        <li>🏙️ Vigo: <strong>25,50 €</strong></li>
+        <li>🏘️ Mos: <strong>25,50 €</strong></li>
+        <li>🌄 Redondela: <strong>25,50 €</strong></li>
+      </ul>
+    </div>
+
+    <div class="bg-orange-50 border-l-4 border-orange-500 rounded-2xl shadow p-4">
+      <h3 class="font-bold flex items-center gap-2">➕ Suplementos</h3>
+      <ul class="mt-2 space-y-1 text-sm">
+        <li>🧳 Maleta: <strong>0,67 €</strong></li>
+        <li>✈️ Aeropuerto: <strong>5,26 €</strong></li>
+        <li>🏢 IFEVI: <strong>3,67€</strong></li>
+        <li>👤 Persona +5 plazas: <strong>0,59 €</strong></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<div id="companeros" class="hidden grid md:grid-cols-3 gap-4">
+  <div class="bg-green-200 rounded-2xl shadow p-4">🚖 Carlos & Cubano<br><strong>Vehículo 27</strong></div>
+  <div class="bg-blue-200 rounded-2xl shadow p-4">🚖 Yorman<br><strong>Vehículo 304</strong></div>
+  <div class="bg-purple-200 rounded-2xl shadow p-4">🚖 Seriocha & Pino<br><strong>Vehículo 485</strong></div>
+</div>
+
+<div id="paradas" class="hidden grid md:grid-cols-2 gap-4">
+  <div class="bg-blue-100 rounded-xl p-3">Falperra</div>
+  <div class="bg-green-100 rounded-xl p-3">Cachamuíña – Ayuntamiento</div>
+  <div class="bg-yellow-100 rounded-xl p-3">Arenal – García Barbón</div>
+  <div class="bg-purple-100 rounded-xl p-3">Samíl – Parada Jonathan</div>
+  <div class="bg-pink-100 rounded-xl p-3">Álvaro Cunqueiro</div>
+  <div class="bg-teal-100 rounded-xl p-3">Castrelos</div>
+  <div class="bg-orange-100 rounded-xl p-3">Ecuador – Corte Inglés</div>
+  <div class="bg-indigo-100 rounded-xl p-3">Val Miñor – Balaídos</div>
+  <div class="bg-red-100 rounded-xl p-3">Torrecedeira</div>
+  <div class="bg-blue-200 rounded-xl p-3">Hiper Alcampo</div>
+  <div class="bg-green-200 rounded-xl p-3">Povisa</div>
+  <div class="bg-yellow-200 rounded-xl p-3">Guixar – Estación tren</div>
+  <div class="bg-purple-200 rounded-xl p-3">Vía Norte – Vialia</div>
+  <div class="bg-pink-200 rounded-xl p-3">Plaza España</div>
+  <div class="bg-teal-200 rounded-xl p-3">Casa del Mar – Beiramar</div>
+  <div class="bg-orange-200 rounded-xl p-3">Aeropuerto</div>
+  <div class="bg-indigo-200 rounded-xl p-3">IFEVI</div>
+  <div class="bg-red-200 rounded-xl p-3">Teixugueiras</div>
+</div>
+
+<div id="peajes" class="hidden grid md:grid-cols-2 gap-4">
+  <div class="bg-white rounded-2xl shadow p-4"><h3 class="font-bold">Peaje Rande</h3><p>Turismo: según tarifa vigente</p></div>
+  <div class="bg-white rounded-2xl shadow p-4"><h3 class="font-bold">Otros peajes</h3><p>Consultar concesionaria</p></div>
+</div>
+
+<div id="centrales" class="hidden grid md:grid-cols-2 gap-4">
+  <div class="bg-red-100 border-l-4 border-red-500 rounded-2xl shadow p-4"><h3 class="font-bold">Central Radio Taxi (La Roja)</h3><p>☎ 986 47 00 00<br>☎ 986 47 00 33<br>24/7 – +400 taxis</p></div>
+  <div class="bg-green-100 border-l-4 border-green-500 rounded-2xl shadow p-4"><h3 class="font-bold">Radio Taxi Vigo (La Verde)</h3><p>☎ 986 252 700<br>☎ 986 272 829<br>App y WiFi</p></div>
+  <div class="bg-yellow-100 border-l-4 border-yellow-500 rounded-2xl shadow p-4"><h3 class="font-bold">Radio Taxi Solidario</h3><p>☎ 986 123 123</p></div>
+</div>
+
+<div id="turnosAeropuerto" class="hidden">
+  <div class="bg-white rounded-2xl shadow p-4 overflow-x-auto">
+    <h3 class="font-bold mb-3">✈️ Turnos Aeropuerto – Diciembre 2025</h3>
+    <table class="min-w-full text-sm border">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="p-2 border">Día</th>
+          <th class="p-2 border">Turno vehículos</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="p-2 border">1 Lunes</td><td class="p-2 border">111 – 132</td></tr>
+        <tr><td class="p-2 border">2 Martes</td><td class="p-2 border">133 – 154</td></tr>
+        <tr><td class="p-2 border">3 Miércoles</td><td class="p-2 border">155 – 176</td></tr>
+        <tr><td class="p-2 border">4 Jueves</td><td class="p-2 border">177 – 198</td></tr>
+        <tr><td class="p-2 border">5 Viernes</td><td class="p-2 border">199 – 220</td></tr>
+        <tr><td class="p-2 border">6 Sábado</td><td class="p-2 border">221 – 242</td></tr>
+        <tr><td class="p-2 border">7 Domingo</td><td class="p-2 border">243 – 264</td></tr>
+        <tr><td class="p-2 border">8 Lunes</td><td class="p-2 border">265 – 286</td></tr>
+        <tr><td class="p-2 border">9 Martes</td><td class="p-2 border">287 – 308</td></tr>
+        <tr><td class="p-2 border">10 Miércoles</td><td class="p-2 border">309 – 330</td></tr>
+        <tr><td class="p-2 border">11 Jueves</td><td class="p-2 border">331 – 352</td></tr>
+        <tr><td class="p-2 border">12 Viernes</td><td class="p-2 border">353 – 374</td></tr>
+        <tr><td class="p-2 border">13 Sábado</td><td class="p-2 border">375 – 396</td></tr>
+        <tr><td class="p-2 border">14 Domingo</td><td class="p-2 border">397 – 418</td></tr>
+        <tr><td class="p-2 border">15 Lunes</td><td class="p-2 border">419 – 440</td></tr>
+        <tr><td class="p-2 border">16 Martes</td><td class="p-2 border">441 – 462</td></tr>
+        <tr><td class="p-2 border">17 Miércoles</td><td class="p-2 border">463 – 484</td></tr>
+        <tr><td class="p-2 border">18 Jueves</td><td class="p-2 border">485 – 507</td></tr>
+        <tr><td class="p-2 border">19 Viernes</td><td class="p-2 border">508 – 530</td></tr>
+        <tr><td class="p-2 border">20 Sábado</td><td class="p-2 border">531 – 553</td></tr>
+        <tr><td class="p-2 border">21 Domingo</td><td class="p-2 border">1 – 22</td></tr>
+        <tr><td class="p-2 border">22 Lunes</td><td class="p-2 border">23 – 44</td></tr>
+        <tr><td class="p-2 border">23 Martes</td><td class="p-2 border">45 – 66</td></tr>
+        <tr><td class="p-2 border">24 Miércoles</td><td class="p-2 border">67 – 88</td></tr>
+        <tr><td class="p-2 border">25 Jueves</td><td class="p-2 border">89 – 110</td></tr>
+        <tr><td class="p-2 border">26 Viernes</td><td class="p-2 border">111 – 132</td></tr>
+        <tr><td class="p-2 border">27 Sábado</td><td class="p-2 border">133 – 154</td></tr>
+        <tr><td class="p-2 border">28 Domingo</td><td class="p-2 border">155 – 176</td></tr>
+        <tr><td class="p-2 border">29 Lunes</td><td class="p-2 border">177 – 198</td></tr>
+        <tr><td class="p-2 border">30 Martes</td><td class="p-2 border">199 – 220</td></tr>
+        <tr><td class="p-2 border">31 Miércoles</td><td class="p-2 border">221 – 242</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+  
+</div>
+</div>
+</section>
+    
+
+  </main>
+
+<footer class="text-center text-xs text-gray-500 p-3">
+  Uso profesional para taxistas – Vigo
+</footer>
+
+  <!-- MODAL CONFIGURACIÓN -->
+  <div id="configModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center">
+    <div class="bg-white rounded-2xl p-5 w-11/12 max-w-md">
+      <h3 class="text-lg font-bold mb-3">⚙️ Configuración de vuelos</h3>
+
+      <label class="block text-sm mb-1">Proveedor de datos</label>
+      <select id="provider" class="w-full border rounded-lg p-2 mb-3">
+        <option value="opensky">OpenSky (gratis)</option>
+        <option value="aviationstack">AviationStack</option>
+      </select>
+
+      <label class="block text-sm mb-1">API Key AviationStack</label>
+      <input id="apiKey" type="text" placeholder="Introduce tu API Key" class="w-full border rounded-lg p-2 mb-3" />
+
+      <div class="flex justify-end gap-2">
+        <button onclick="closeConfig()" class="px-3 py-1">Cancelar</button>
+        <button onclick="saveConfig()" class="bg-black text-white px-4 py-1 rounded-lg">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+// ===== SIDEBAR TOGGLE =====
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const buttons = sb.querySelectorAll('button');
+
+  sb.classList.toggle('md:w-64');
+  sb.classList.toggle('md:w-16');
+
+  buttons.forEach(btn => {
+    const text = btn.querySelector('span');
+    if (text) text.classList.toggle('hidden');
+  });
+}
+
+// ===== DRAG & DROP SIDEBAR =====
+document.querySelectorAll('aside button').forEach(btn => {
+  btn.draggable = true;
+  btn.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', btn.outerHTML));
+  btn.addEventListener('dragover', e => e.preventDefault());
+  btn.addEventListener('drop', e => {
+    e.preventDefault();
+    const dragged = e.dataTransfer.getData('text/plain');
+    btn.insertAdjacentHTML('beforebegin', dragged);
+    btn.remove();
+  });
+});
+
+// ================= CONFIGURACIÓN =================
+let config = JSON.parse(localStorage.getItem('config')) || { provider: 'opensky', apiKey: '' };
+
+function openConfig() {
+  const modal = document.getElementById('configModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  document.getElementById('provider').value = config.provider;
+  document.getElementById('apiKey').value = config.apiKey;
+}
+
+function closeConfig() {
+  const modal = document.getElementById('configModal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+function saveConfig() {
+  config.provider = document.getElementById('provider').value;
+  config.apiKey = document.getElementById('apiKey').value;
+  localStorage.setItem('config', JSON.stringify(config));
+  closeConfig();
+  loadFlights();
+}
+
+// ================= VUELOS =================
+
+const trainsList = document.getElementById('trains');
+const trainError = document.getElementById('trainError');
+
+function hideAll() {
+  const sections = ['flightsBlock','trainsBlock','tarifas','companeros','paradas','peajes','centrales','turnosAeropuerto'];
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
+}
+
+function showFlights() {
+  hideAll();
+  document.getElementById('flightsBlock').classList.remove('hidden');
+}
+
+function showTrains() {
+  hideAll();
+  document.getElementById('trainsBlock').classList.remove('hidden');
+}
+function showTarifas() { hideAll(); document.getElementById('tarifas').classList.remove('hidden'); }
+function showCompaneros() { hideAll(); document.getElementById('companeros').classList.remove('hidden'); }
+function showParadas() { hideAll(); document.getElementById('paradas').classList.remove('hidden'); }
+function showPeajes() { hideAll(); document.getElementById('peajes').classList.remove('hidden'); }
+function showCentrales() { hideAll(); document.getElementById('centrales').classList.remove('hidden'); }
+function showTurnos() { hideAll(); document.getElementById('turnosAeropuerto').classList.remove('hidden'); }
+
+//() { hideAll(); document.getElementById('aeropuertoInfo').classList.remove('hidden'); }(); document.getElementById('paradas').classList.remove('hidden'); }
+
+function loadTrains(station) {
+  hideAll();
+  document.getElementById('trainsBlock').classList.remove('hidden');
+
+  const trainsList = document.getElementById('trains');
+  const trainError = document.getElementById('trainError');
+  trainError.classList.add('hidden');
+
+  const today = new Date().toLocaleDateString('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+
+  let stationName = '';
+  let url = '';
+
+  if (station === 'urz') {
+    stationName = 'Vigo Urzáiz (Vialia)';
+    url = 'https://www.adif.es/w/08223-vigo-urzaiz?pageFromPlid=335';
+  } else if (station === 'gui') {
+    stationName = 'Vigo Guixar';
+    url = 'https://www.adif.es/w/22308-vigo-guixar?pageFromPlid=335';
+  } else {
+    trainError.innerText = 'Estación no válida';
+    trainError.classList.remove('hidden');
+    return;
+  }
+
+  trainsList.innerHTML = `
+    <li class="p-3 bg-gray-50 rounded-xl">🚆 <strong>Estación:</strong> ${stationName}</li>
+    <li class="p-3 bg-gray-50 rounded-xl">📅 <strong>Fecha:</strong> ${today}</li>
+    <li class="p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded-xl">RENFE no ofrece una API pública para mostrar automáticamente las llegadas del día.</li>
+    <li class="p-3 bg-green-50 border-l-4 border-green-500 rounded-xl">👉 Consulta aquí las <strong>llegadas programadas de hoy</strong>:<br><a href="${url}" target="_blank" rel="noopener noreferrer" class="inline-block mt-2 bg-blue-600 text-white px-3 py-1 rounded-lg">Abrir horarios oficiales ADIF</a></li>
+  `;
+}
+
+const flightsList = document.getElementById('flights');
+
+async function loadFlights() {
+  const debugEl = document.getElementById('debug');
+  debugEl.classList.add('hidden');
+  debugEl.innerText = '';
+
+  flightsList.innerHTML = '<li class="text-gray-400">Cargando vuelos…</li>';
+
+  try {
+    const now = Math.floor(Date.now() / 1000);
+    const threeHoursAgo = now - 3 * 60 * 60;
+    const twentyFourHoursAhead = now + 24 * 60 * 60;
+
+    let url;
+    let providerLabel = 'Fuente: OpenSky Network (API pública)';
+
+    if (config.provider === 'aviationstack' && config.apiKey) {
+      // AviationStack FREE no permite HTTPS directo ni CORS → usamos proxy
+      // Además, arrivals puras no siempre vienen, usamos flights + filtro
+      providerLabel = 'Fuente: AviationStack (API privada del usuario)';
+      url = `https://api.allorigins.win/raw?url=${encodeURIComponent('http://api.aviationstack.com/v1/flights?access_key=' + config.apiKey + '&arr_iata=VGO')}`;
+    } else {
+      url = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://opensky-network.org/api/flights/arrival?airport=LEVX&begin=' + threeHoursAgo + '&end=' + now)}`;
+    }
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    let flights = config.provider === 'aviationstack' ? data?.data : data;
+
+    if (!flights) {
+      debugEl.innerText = 'No se recibieron datos de la API. Revisa la API Key o el plan.';
+      debugEl.classList.remove('hidden');
+    }
+
+    flightsList.innerHTML = '';
+
+    // Ordenar por hora estimada o programada de llegada (más próxima primero)
+    flights.sort((a, b) => {
+      const timeA = config.provider === 'aviationstack'
+        ? new Date(a.arrival?.estimated || a.arrival?.scheduled || 0).getTime()
+        : (a.lastSeen || 0) * 1000;
+      const timeB = config.provider === 'aviationstack'
+        ? new Date(b.arrival?.estimated || b.arrival?.scheduled || 0).getTime()
+        : (b.lastSeen || 0) * 1000;
+      return timeA - timeB;
+    });
+
+    if (!flights || flights.length === 0) {
+      flightsList.innerHTML = '<li>No hay datos reales disponibles en este momento</li>';
+      return;
+    }
+
+    // Separar vuelos pasados y futuros
+    const nowMs = Date.now();
+
+    const pastFlights = flights.filter(f => {
+      const t = new Date(f.arrival?.estimated || f.arrival?.scheduled || 0).getTime();
+      return t && t < nowMs && t >= nowMs - 3 * 60 * 60 * 1000;
+    });
+
+    // AviationStack solo devuelve futuros si vienen como scheduled/active
+    const futureFlights = flights.filter(f => {
+      const t = new Date(f.arrival?.estimated || f.arrival?.scheduled || 0).getTime();
+      return t && t >= nowMs && t <= nowMs + 24 * 60 * 60 * 1000;
+    });
+
+    // Limitar pasados a máximo 3 (los más recientes)
+    pastFlights.sort((a, b) => new Date(b.arrival?.estimated || b.arrival?.scheduled).getTime() - new Date(a.arrival?.estimated || a.arrival?.scheduled).getTime());
+    const limitedPast = pastFlights.slice(0, 3);
+
+    // Unir lista final
+    flights = [...limitedPast.reverse(), ...futureFlights];
+
+    flights.forEach(flight => {
+      const li = document.createElement('li');
+      li.className = 'p-2 bg-gray-50 rounded-lg';
+
+      if (config.provider === 'aviationstack') {
+        // Corrección de estado usando tiempos reales
+        let status = flight.flight_status;
+        const nowMs = Date.now();
+        const est = flight.arrival?.estimated ? new Date(flight.arrival.estimated).getTime() : null;
+        const sched = flight.arrival?.scheduled ? new Date(flight.arrival.scheduled).getTime() : null;
+
+        // Si la hora estimada ya pasó y no viene como landed, lo marcamos como landed
+        if ((est && est < nowMs) || (sched && sched < nowMs)) {
+          status = 'landed';
+        }
+        let color = 'bg-yellow-100 text-yellow-800';
+
+        if (status === 'landed') color = 'bg-red-100 text-red-800';
+        if (status === 'active' || status === 'approach' || status === 'arriving') color = 'bg-green-100 text-green-800';
+
+        const eta = flight.arrival?.estimated || flight.arrival?.scheduled;
+        let soonBadge = '';
+        if (eta) {
+          const minutes = (new Date(eta).getTime() - Date.now()) / 60000;
+          if (minutes > 0 && minutes <= 15) {
+            soonBadge = '<span class="ml-2 text-xs bg-orange-500 text-white px-2 py-0.5 rounded-full">⏰ &lt;15 min</span>';
+          }
+        }
+
+        li.innerHTML = `
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-base">✈️ <strong>${flight.flight?.iata || 'Vuelo'}</strong>${soonBadge}</span>
+            <span class="text-xs px-2 py-0.5 rounded-full ${color}">${status}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <div class="flex items-center gap-1">🏢 <span class="font-semibold">Aerolínea:</span></div><div>${flight.airline?.name || 'no disponible'}</div>
+            <div class="flex items-center gap-1">🛫 <span class="font-semibold">Origen:</span></div><div>${flight.departure?.iata || 'desconocido'} → VGO</div>
+            <div class="flex items-center gap-1">⏱️ <span class="font-semibold">Salida:</span></div><div>${flight.departure?.scheduled ? new Date(flight.departure.scheduled).toLocaleTimeString() : 'no disponible'}</div>
+            <div class="flex items-center gap-1">📅 <span class="font-semibold">Llegada prog.:</span></div><div>${flight.arrival?.scheduled ? new Date(flight.arrival.scheduled).toLocaleTimeString() : 'no disponible'}</div>
+            <div class="flex items-center gap-1">⏰ <span class="font-semibold">Llegada est.:</span></div><div>${flight.arrival?.estimated ? new Date(flight.arrival.estimated).toLocaleTimeString() : 'no disponible'}</div>
+            
+          </div>`;
+      } else {
+        li.innerHTML = `✈️ <strong>${flight.callsign || 'Vuelo'}</strong><br>
+        Origen: ${flight.estDepartureAirport || 'desconocido'}<br>
+        Hora llegada (última señal): ${new Date(flight.lastSeen * 1000).toLocaleTimeString()}`;
+      }
+
+      flightsList.appendChild(li);
+    });
+
+    document.querySelector('.text-xs.text-gray-500.mt-3').innerText = providerLabel;
+
+  } catch (err) {
+    debugEl.innerText = 'Error al cargar datos reales de vuelos. El proveedor no respondió o bloqueó la solicitud.'
+    debugEl.classList.remove('hidden');
+    flightsList.innerHTML = '<li>No se pudieron cargar datos reales de vuelos</li>';
+  }
+}
+
+loadFlights();
+setInterval(loadFlights, 3 * 60 * 60 * 1000); // refresco cada 3 horas
+</script>
+</body>
+</html>
